@@ -22,7 +22,7 @@ pub struct TestInflux {
 impl TestInflux {
     /// this panics if it fails to start. thats probably fine for tests, but if not this can easily be changed to return an anyhow::Result
     pub async fn spawn() -> Self {
-        let : String = rand::thread_rng()
+        let random: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(8)
             .map(char::from)
