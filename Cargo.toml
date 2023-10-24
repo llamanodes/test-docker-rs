@@ -1,0 +1,38 @@
+[package]
+name = "test-docker"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["anvil", "influx", "mysql", "redis"]
+
+anvil = ["dep:ethers"]
+influx = ["dep:influxdb2", "dep:influxdb2-structmap"]
+mysql = []
+redis = []
+
+[dependencies]
+anyhow = "1.0.75"
+rand = "0.8.5"
+serde = "1.0.189"
+serde_json = "1.0.107"
+tracing = "0.1.40"
+tokio = { version = "1.33.0", features = ["full"] }
+
+# anvil
+ethers = { version = "2.0.10", default-features = false, features = ["rustls", "ws"], optional = true }
+
+# influx
+influxdb2 = { git = "https://github.com/llamanodes/influxdb2", default-features = false, features = ["rustls"], rev = "2d125128696a29d7e0b9abc052c928937e7c0579", optional = true }
+influxdb2-structmap = { git = "https://github.com/llamanodes/influxdb2/", rev = "2d125128696a29d7e0b9abc052c928937e7c0579", optional = true }
+
+# mysql
+
+# redis
+
+[dev-dependencies]
+env_logger = { version ="0.10", default-features = true, features = ["auto-color"] }
+test-log = { version = "0.2.13", default-features = false, features = ["trace"] }
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
