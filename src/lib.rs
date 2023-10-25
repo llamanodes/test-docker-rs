@@ -1,3 +1,5 @@
+pub mod docker;
+
 #[cfg(feature = "anvil")]
 pub mod anvil;
 

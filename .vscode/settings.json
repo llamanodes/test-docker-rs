@@ -6,4 +6,5 @@
         "--target-dir",
         "target/rust-analyzer"
     ],
+    "rust-analyzer.showUnlinkedFileNotification": false,
 }

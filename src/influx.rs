@@ -1,6 +1,4 @@
 use influxdb2::Client;
-use rand::{self, distributions::Alphanumeric, Rng};
-use std::process::Command as SyncCommand;
 use std::time::Duration;
 use tokio::{
     net::TcpStream,
@@ -8,6 +6,8 @@ use tokio::{
     time::{sleep, Instant},
 };
 use tracing::{info, trace};
+
+use crate::docker::{random_container_name, TestContainer};
 
 #[derive(Debug)]
 pub struct TestInflux {
@@ -21,14 +21,8 @@ pub struct TestInflux {
 
 impl TestInflux {
     /// this panics if it fails to start. thats probably fine for tests, but if not this can easily be changed to return an anyhow::Result
-    pub async fn spawn() -> Self {
-        let random: String = rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(8)
-            .map(char::from)
-            .collect();
-
-        let container_name = format!("docker-test-fixtures-influx-{}", random);
+    pub async fn spawn(docker_tag: &str) -> Self {
+        let container_name = random_container_name("influx");
 
         info!(%container_name);
 
@@ -48,18 +42,18 @@ impl TestInflux {
                 "-e",
                 "DOCKER_INFLUXDB_INIT_MODE=setup",
                 "-e",
-                &format!("DOCKER_INFLUXDB_INIT_USERNAME={}", username),
+                &format!("DOCKER_INFLUXDB_INIT_USERNAME={username}"),
                 "-e",
-                &format!("DOCKER_INFLUXDB_INIT_PASSWORD={}", password),
+                &format!("DOCKER_INFLUXDB_INIT_PASSWORD={password}"),
                 "-e",
-                &format!("DOCKER_INFLUXDB_INIT_ORG={}", org),
+                &format!("DOCKER_INFLUXDB_INIT_ORG={org}"),
                 "-e",
-                &format!("DOCKER_INFLUXDB_INIT_BUCKET={}", init_bucket),
+                &format!("DOCKER_INFLUXDB_INIT_BUCKET={init_bucket}"),
                 "-e",
-                &format!("DOCKER_INFLUXDB_INIT_ADMIN_TOKEN={}", admin_token),
+                &format!("DOCKER_INFLUXDB_INIT_ADMIN_TOKEN={admin_token}"),
                 "-p",
                 "0:8086",
-                "influxdb:2.6.1-alpine",
+                &format!("influxdb:{docker_tag}"),
             ])
             .output()
             .await
@@ -161,14 +155,15 @@ impl TestInflux {
     }
 }
 
+impl TestContainer for TestInflux {
+    fn container_name(&self) -> &str {
+        self.container_name.as_str()
+    }
+}
+
 impl Drop for TestInflux {
     fn drop(&mut self) {
-        info!(%self.container_name, "killing influx");
-
-        // kill -9 is fine since we don't care about the data once the test is done
-        let _ = SyncCommand::new("docker")
-            .args(["kill", "-s", "9", &self.container_name])
-            .output();
+        self.kill_container()
     }
 }
 
@@ -180,7 +175,7 @@ mod test {
 
     #[test_log::test(tokio::test)]
     async fn start_and_stop() -> anyhow::Result<()> {
-        let x = TestInflux::spawn().await;
+        let x = TestInflux::spawn("2.7-alpine").await;
 
         let h = x.client.health().await?;
 

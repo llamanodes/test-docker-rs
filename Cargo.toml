@@ -11,7 +11,7 @@ default = ["anvil", "influx", "mysql", "redis"]
 anvil = ["dep:ethers"]
 influx = ["dep:influxdb2", "dep:influxdb2-structmap"]
 mysql = []
-redis = []
+redis = ["dep:redis"]
 
 [dependencies]
 anyhow = "1.0.75"
@@ -31,8 +31,9 @@ influxdb2-structmap = { git = "https://github.com/llamanodes/influxdb2/", rev = 
 # mysql
 
 # redis
+redis = { version = "0.23.3", default-features = false, optional = true }
 
 [dev-dependencies]
-env_logger = { version ="0.10", default-features = true, features = ["auto-color"] }
+env_logger = { version = "0.10" }
 test-log = { version = "0.2.13", default-features = false, features = ["trace"] }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
